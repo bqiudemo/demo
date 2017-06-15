@@ -67,7 +67,7 @@ public class MathResource {
     @GET
     @Produces({MediaType.APPLICATION_JSON})
     @Path("/fibonacci/{number}")
-    public Response getStagePetrinets(@PathParam("number") String number) {
+    public Response GetFibonacciNumber(@PathParam("number") String number) {
     	
     	number = StringUtils.trimToNull(number);
     	long fibonacciNumber;
