@@ -1,0 +1,44 @@
+
+apply plugin: 'java'
+
+sourceCompatibility = "${javaSourceCompatibility}"
+targetCompatibility = "${javaTargetCompatibility}"
+
+configurations {
+    provided
+}
+
+sourceSets {
+    main.compileClasspath += configurations.provided
+    test.compileClasspath += configurations.provided
+    test.runtimeClasspath += configurations.provided
+
+    main {
+        java {
+            srcDir 'src/main/java'
+            exclude '**/license/**'
+        }
+    }
+    test {
+        java {
+            srcDir 'src/test/java'
+            exclude '**/license/**'
+        }
+    }
+}
+
+eclipse.classpath.plusConfigurations += [ configurations.provided ]
+
+dependencies {
+    compile ('org.apache.commons:commons-lang3:3.3.2')
+    compile ('commons-io:commons-io:2.4')
+    compile ('commons-daemon:commons-daemon:1.0.15')
+    compile ("org.eclipse.jetty:jetty-server:${jettyVersion}")
+    compile ("org.eclipse.jetty:jetty-servlet:${jettyVersion}")
+    compile ("org.glassfish.jersey.core:jersey-server:${jerseyVersion}")
+    compile ("org.glassfish.jersey.containers:jersey-container-servlet:${jerseyVersion}")
+    compile ("org.glassfish.jersey.media:jersey-media-json-jackson:${jerseyVersion}")
+
+    testCompile('junit:junit:4.+')
+}
+

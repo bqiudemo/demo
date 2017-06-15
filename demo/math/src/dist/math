@@ -1,0 +1,13 @@
+#!/bin/bash
+
+[[ -z "$RUN_ID" ]] && RUN_ID=`date +"%Y%m%d%H%M%S"`
+[[ -z "$RUN_NAME" ]] && RUN_NAME="math"
+[[ -z "$LOG_PATH" ]] && LOG_PATH="./log"
+
+[[ -z "$JVM_OPTS" ]] && JVM_OPTS="-Xms2048m -Xmx4096m"
+[[ -z "$APP_OPTS" ]] && APP_OPTS="$RUN_ARGS -Dapp.name=$RUN_NAME -Dapp.logpath=$LOG_PATH -Dapp.id=$RUN_ID $MAIN_OPTS"
+
+export JAVA_OPTS="-server $JVM_OPTS"
+
+exec bin/math "$@"
+

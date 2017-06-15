@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <contextName>math</contextName>
+    <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator" />
+    <jmxConfigurator />
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>log/math.log</file>
+        <append>true</append>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- rollover daily, with GZIP compression -->
+            <FileNamePattern>log/math-%d{yyyy-MM-dd}.log.gz</FileNamePattern>
+            <!-- keep 15 days' worth of history -->
+            <MaxHistory>15</MaxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyyMMdd HH:mm:ss.SSS}|%5.5level|%22.22logger{0}|%msg%n</pattern>
+        </encoder>
+    </appender>
+    <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>1000</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <appender-ref ref="FILE" />
+    </appender>
+    <logger name="org.eclipse.jetty" level="INFO" />
+    <logger name="com.leansoft.bigqueue.page" level="INFO" />
+    <root level="DEBUG">
+        <appender-ref ref="ASYNC_FILE" />
+    </root>
+</configuration>

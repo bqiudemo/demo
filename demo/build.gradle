@@ -1,0 +1,141 @@
+task wrapper(type: Wrapper) { gradleVersion = '3.2' }
+
+buildscript {
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'se.transmode.gradle:gradle-docker:1.2'
+        classpath 'pl.allegro.tech.build:axion-release-plugin:1.3.2'
+    }
+}
+
+// Setup to use gitflow release tags for version numbers
+apply plugin: 'pl.allegro.tech.build.axion-release'
+
+scmVersion {
+    tag {
+        prefix = ''
+    }
+}
+
+
+project.version = 'latest'
+project.group = 'demo'
+
+
+def buildTime() {
+  def df = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+  df.setTimeZone(TimeZone.getTimeZone("UTC"))
+  return df.format(new Date())
+}
+
+ext.buildTime = buildTime()
+
+ext.javaSourceCompatibility = 1.7
+ext.javaTargetCompatibility = 1.7
+ext.slf4jVersion = "1.7.5"
+ext.jacksonVersion = "2.6.2"
+ext.logbackVersion="1.0.13"
+ext.nettyVersion="3.10.0.Final"
+ext.jerseyVersion = "2.18"
+ext.jettyVersion = "9.2.13.v20150730"
+ext.jerseyVersion = "2.22"
+ext.mockitoVersion = "1.10.19"
+
+allprojects {
+    apply plugin: 'eclipse'
+
+    project.group = rootProject.group
+    project.version = rootProject.version
+
+    configurations.all {
+        resolutionStrategy.force 'com.google.guava:guava:18.0'
+    }
+}
+
+
+subprojects {
+
+    repositories {
+        mavenCentral()
+
+        maven {
+            url 'https://raw.github.com/bulldog2011/bulldog-repo/master/repo/releases/'
+        }
+    }
+
+    configurations {
+        provided
+    }
+
+    eclipse.classpath.plusConfigurations += [configurations.provided]
+
+    task allDeps(type: DependencyReportTask) {}
+    task allDepInsight(type: DependencyInsightReportTask) << {}
+}
+
+
+configure([
+    project(':math'),
+]) {
+    apply plugin: 'application'
+
+    jar {
+        manifest {
+            attributes 'Implementation-Vendor': 'Demo.',
+	        'Implementation-Title': "$project.name",
+                'Implementation-Version': version
+        }
+    }
+
+    applicationDistribution.from("conf") {
+        include "**/*"
+        into "conf"
+    }
+
+    applicationDistribution.from("src/dist") {
+        include "**/*"
+        into ""
+    }
+
+    task distProjectConfig(type: Tar, dependsOn: installApp) {
+        baseName = baseName + "-conf"
+        extension "tgz"
+        compression = Compression.GZIP
+        from "$buildDir/install/$project.name/conf"
+        into ""
+    }
+
+    task distProject(type: Tar, dependsOn: distProjectConfig) {
+        extension "tgz"
+        compression = Compression.GZIP
+        from "$buildDir/install/$project.name"
+        into "/opt/$project.name"
+    }
+
+    task copyProjectTarToDockerDir(type: Copy, dependsOn: distProject) {
+        from distProject.outputs.files.singleFile
+        into "$buildDir/docker"
+    }
+
+    task publishProjectConfigTar(type: Copy, dependsOn: copyProjectTarToDockerDir) {
+        from distProjectConfig.outputs.files.singleFile
+        into rootProject.hasProperty('deployPath') ? deployPath : "/tmp"
+    }
+    publishProjectConfigTar.enabled = rootProject.hasProperty('deployPath')
+
+    task publishProjectConfigTarPointer(type: Copy, dependsOn: publishProjectConfigTar) {
+        from distProjectConfig.outputs.files.singleFile
+        into rootProject.hasProperty('deployPath') ? deployPath : "/tmp"
+//        rename { String fileName -> fileName.replace("$version", "$gtag") }
+    }
+    publishProjectConfigTarPointer.enabled = rootProject.hasProperty('deployPath')
+
+    task makeProject(type: Task, dependsOn: publishProjectConfigTarPointer) {
+        // empty marker task
+    }
+}
+
